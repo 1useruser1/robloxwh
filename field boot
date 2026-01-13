@@ -1,8 +1,8 @@
 --[[
 
-	AirHub by Exunys © CC0 1.0 Universal (2023)
+	fieldboot by user © CC0 1.0 Universal (2026)
 
-	https://github.com/Exunys
+	https://discord.gg/gSf5q4d8ga
 
 ]]
 
@@ -22,8 +22,8 @@ getgenv().AirHub = {}
 
 --// Load Modules
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub/main/Modules/Aimbot.lua"))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub/main/Modules/Wall%20Hack.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/1useruser1/robloxwh/refs/heads/main/aimbot"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/1useruser1/robloxwh/refs/heads/main/wallh"))()
 
 --// Variables
 
@@ -40,7 +40,7 @@ Library.UnloadCallback = function()
 end
 
 local MainFrame = Library:CreateWindow({
-	Name = "AirHub",
+	Name = "Field Boot",
 	Themeable = {
 		Image = "7059346386",
 		Info = "Made by Exunys\nPowered by Pepsi's UI Library",
@@ -900,33 +900,8 @@ FunctionsSection:AddButton({
 })
 
 FunctionsSection:AddButton({
-	Name = "Copy Script Page",
+	Name = "Field boot discord",
 	Callback = function()
-		setclipboard("https://github.com/Exunys/AirHub")
+		setclipboard("https://discord.gg/gSf5q4d8ga")
 	end
 })
-
---// AirHub V2 Prompt
-
-do
-	local Aux = Instance.new("BindableFunction")
-    
-	Aux.OnInvoke = function(Answer)
-		if Answer == "No" then
-			return
-		end
-
-		Library.Unload()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub-V2/main/src/Main.lua"))()
-	end
-
-	game.StarterGui:SetCore("SendNotification", {
-		Title = "🎆  AirHub V2  🎆",
-		Text = "Would you like to use the new AirHub V2 script?",
-		Button1 = "Yes",
-		Button2 = "No",
-		Duration = 1 / 0,
-		Icon = "rbxassetid://6238537240",
-		Callback = Aux
-	})
-end
