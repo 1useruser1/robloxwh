@@ -1,6 +1,6 @@
 --[[
 
-	Aimbot Module [fieldboot] by user © CC0 1.0 Universal (2026)
+	Aimbot Module [Field boot] by user © CC0 1.0 Universal (2026)
 
 	https://discord.gg/gSf5q4d8ga
 
@@ -12,7 +12,7 @@ local pcall, getgenv, next, setmetatable, Vector2new, CFramenew, Color3fromRGB, 
 
 --// Launching checks
 
-if not getgenv().fieldboot or getgenv().fieldboot.Aimbot then return end
+if not getgenv().AirHub or getgenv().AirHub.Aimbot then return end
 
 --// Services
 
@@ -29,7 +29,7 @@ local RequiredDistance, Typing, Running, ServiceConnections, Animation, Original
 
 --// Environment
 
-getgenv().fieldboot.Aimbot = {
+getgenv().AirHub.Aimbot = {
 	Settings = {
 		Enabled = false,
 		TeamCheck = false,
@@ -58,7 +58,7 @@ getgenv().fieldboot.Aimbot = {
 	FOVCircle = Drawingnew("Circle")
 }
 
-local Environment = getgenv().fieldboot.Aimbot
+local Environment = getgenv().AirHub.Aimbot
 
 --// Core Functions
 
@@ -193,8 +193,8 @@ function Environment.Functions:Exit()
 
 	Environment.FOVCircle:Remove()
 
-	getgenv().fieldboot.Aimbot.Functions = nil
-	getgenv().fieldboot.Aimbot = nil
+	getgenv().AirHub.Aimbot.Functions = nil
+	getgenv().AirHub.Aimbot = nil
 
 	Load = nil; ConvertVector = nil; CancelLock = nil; GetClosestPlayer = nil;
 end
