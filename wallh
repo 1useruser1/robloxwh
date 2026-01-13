@@ -1,6 +1,6 @@
 --[[
 
-	Wall Hack Module [Fieldb] by Exunys © CC0 1.0 Universal (2023)
+	Wall Hack Module [field boot] by user © CC0 1.0 Universal (2026)
 
 	https://github.com/Exunys
 
@@ -13,7 +13,7 @@ local WorldToViewportPoint, Vector2new, Vector3new, Vector3zero, CFramenew, Draw
 
 --// Launching checks
 
-if not getgenv().Fieldb or getgenv().Fieldb.WallHack then return end
+if not getgenv().AirHub or getgenv().AirHub.WallHack then return end
 
 --// Services
 
@@ -29,7 +29,7 @@ local ServiceConnections = {}
 
 --// Environment
 
-getgenv().Fieldb.WallHack = {
+getgenv().AirHub.WallHack = {
 	Settings = {
 		Enabled = false,
 		TeamCheck = false,
@@ -128,7 +128,7 @@ getgenv().Fieldb.WallHack = {
 	WrappedPlayers = {}
 }
 
-local Environment = getgenv().Fieldb.WallHack
+local Environment = getgenv().AirHub.WallHack
 
 --// Core Functions
 
@@ -866,8 +866,8 @@ function Environment.Functions:Exit()
 		end
 	end
 
-	getgenv().Fieldb.WallHack.Functions = nil
-	getgenv().Fieldb.WallHack = nil
+	getgenv().AirHub.WallHack.Functions = nil
+	getgenv().AirHub.WallHack = nil
 
 	Load = nil; GetPlayerTable = nil; AssignRigType = nil; InitChecks = nil; UpdateCham = nil; Visuals = nil; Wrap = nil; UnWrap = nil
 end
