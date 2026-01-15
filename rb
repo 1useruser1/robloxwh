@@ -44,7 +44,7 @@ local MainFrame = Library:CreateWindow({
 	Name = "Dev Superiority",
 	Themeable = {
 		Image = "7059346386",
-		Info = "Superiority",
+		Info = "Dev Superiority",
 		Credit = false
 	},
 	Background = "",
