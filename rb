@@ -41,7 +41,7 @@ Library.UnloadCallback = function()
 end
 
 local MainFrame = Library:CreateWindow({
-	Name = "Superiority",
+	Name = "Dev Superiority",
 	Themeable = {
 		Image = "7059346386",
 		Info = "Superiority",
