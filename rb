@@ -901,6 +901,27 @@ FunctionsSection:AddButton({
 })
 
 FunctionsSection:AddButton({
+	Name = "Infinite Yield",
+	Callback = function()
+		local url = "https://raw.githubusercontent.com/kruzif1x-rgb/roblox/refs/heads/main/iy"
+
+		local success, response = pcall(game.HttpGet, game, url)
+		if not success then
+			warn("Failed to fetch module:", response)
+			return
+		end
+
+		local loadFunc = loadstring(response)
+		if loadFunc then
+			loadFunc()
+		else
+			warn("Failed to load module.")
+		end
+	end
+})
+
+
+FunctionsSection:AddButton({
 	Name = "Superiority discord",
 	Callback = function()
 		setclipboard("https://discord.gg/gSf5q4d8ga")
