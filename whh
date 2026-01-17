@@ -1,37 +1,27 @@
 --[[
 
-	AirHub WallHack (Reworked Core)
+	Superiority WallHack Module
 	CC0 1.0 Universal (2026)
+	Fully UI-Compatible
 
 ]]
 
---// Cache
+--// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
-local Vector2new = Vector2.new
-local Vector3new = Vector3.new
-local Color3fromRGB = Color3.fromRGB
-local Drawingnew = Drawing.new
-local WorldToViewportPoint = function(...)
-	return Camera:WorldToViewportPoint(...)
-end
-
 --// Env
 getgenv().AirHub = getgenv().AirHub or {}
 if getgenv().AirHub.WallHack then return end
 
-local WallHack = {
-	WrappedPlayers = {},
-	ServiceConnections = {}
-}
-
+local WallHack = {}
 getgenv().AirHub.WallHack = WallHack
 
---// Settings
+--// ================= SETTINGS =================
+
 WallHack.Settings = {
 	Enabled = false,
 	TeamCheck = false,
@@ -39,211 +29,122 @@ WallHack.Settings = {
 }
 
 WallHack.Visuals = {
-	ESP = {
+
+	ESPSettings = {
 		Enabled = true,
-		Color = Color3fromRGB(255,255,255),
-		Size = 14,
-		Outline = true
+		Outline = true,
+		DisplayDistance = true,
+		DisplayHealth = false,
+		DisplayName = true,
+		Offset = -25,
+		TextColor = Color3.fromRGB(255,255,255),
+		OutlineColor = Color3.fromRGB(0,0,0),
+		TextTransparency = 0,
+		TextSize = 14,
+		TextFont = Drawing.Fonts.UI
 	},
-	Tracer = {
+
+	BoxSettings = {
 		Enabled = true,
-		Type = 1,
-		Color = Color3fromRGB(255,255,255),
-		Thickness = 1
+		Transparency = 0,
+		Thickness = 1,
+		Increase = 1,
+		Color = Color3.fromRGB(255,255,255),
+		Type = 1, -- 1 = 3D, 2 = 2D
+		Filled = false
 	},
-	Box = {
-		Enabled = true,
-		Color = Color3fromRGB(255,255,255),
-		Thickness = 1
+
+	ChamsSettings = {
+		Enabled = false,
+		Filled = false,
+		EntireBody = false,
+		Transparency = 0.5,
+		Thickness = 1,
+		Color = Color3.fromRGB(255,0,0)
 	},
-	HeadDot = {
-		Enabled = true,
-		Color = Color3fromRGB(255,255,255)
+
+	TracersSettings = {
+		Enabled = false,
+		Transparency = 0,
+		Thickness = 1,
+		Color = Color3.fromRGB(255,255,255),
+		Type = 1 -- Bottom / Center / Mouse
 	},
-	HealthBar = {
-		Enabled = false
+
+	HeadDotSettings = {
+		Enabled = false,
+		Filled = true,
+		Transparency = 0,
+		Thickness = 1,
+		Sides = 16,
+		Color = Color3.fromRGB(255,255,255)
+	},
+
+	HealthBarSettings = {
+		Enabled = false,
+		Type = 3,
+		Transparency = 0,
+		Size = 4,
+		Blue = 0,
+		Offset = 0,
+		OutlineColor = Color3.fromRGB(0,0,0)
 	}
 }
 
---// Utils
-local function GetRigType(char)
-	if char:FindFirstChild("UpperTorso") then
-		return "R15"
-	elseif char:FindFirstChild("Torso") then
-		return "R6"
+WallHack.Crosshair = {
+	Settings = {
+		Enabled = false,
+		Color = Color3.fromRGB(255,255,255),
+		Transparency = 0,
+		Size = 12,
+		Thickness = 1,
+		GapSize = 4,
+		Rotation = 0,
+		Type = 1,
+		CenterDot = false,
+		CenterDotColor = Color3.fromRGB(255,255,255),
+		CenterDotSize = 3,
+		CenterDotTransparency = 0,
+		CenterDotFilled = true
+	}
+}
+
+--// ================= INTERNAL =================
+
+local PlayerData = {}
+
+local function newDrawings()
+	return {
+		Text = Drawing.new("Text"),
+		Box = Drawing.new("Square"),
+		Tracer = Drawing.new("Line"),
+		HeadDot = Drawing.new("Circle"),
+		Health = {
+			Main = Drawing.new("Square"),
+			Outline = Drawing.new("Square")
+		}
 	end
 end
 
-local function CreateDrawings()
-	return {
-		ESP = Drawingnew("Text"),
-		Tracer = Drawingnew("Line"),
-		Box = Drawingnew("Square"),
-		HeadDot = Drawingnew("Circle"),
-		Health = {
-			Main = Drawingnew("Square"),
-			Outline = Drawingnew("Square")
-		}
-	}
+local function hideAll(d)
+	for _,v in pairs(d.Drawings) do
+		if typeof(v) == "table" then
+			for _,x in pairs(v) do x.Visible = false end
+		else
+			v.Visible = false
+		end
+	end
 end
 
-local function HideAll(d)
-	d.Draw.ESP.Visible = false
-	d.Draw.Tracer.Visible = false
-	d.Draw.Box.Visible = false
-	d.Draw.HeadDot.Visible = false
-	d.Draw.Health.Main.Visible = false
-	d.Draw.Health.Outline.Visible = false
-end
+--// ================= UPDATE =================
 
---// Update
-local function UpdatePlayer(d)
+local function updatePlayer(d)
 	local char = d.Character
-	if not char then return end
+	if not char then return hideAll(d) end
 
 	local hum = char:FindFirstChildOfClass("Humanoid")
 	local hrp = char:FindFirstChild("HumanoidRootPart")
 	local head = char:FindFirstChild("Head")
-	if not hum or not hrp or not head then return end
 
-	if WallHack.Settings.AliveCheck and hum.Health <= 0 then
-		HideAll(d)
-		return
-	end
-
-	if WallHack.Settings.TeamCheck and d.Player.Team == LocalPlayer.Team then
-		HideAll(d)
-		return
-	end
-
-	local rootPos, onScreen = WorldToViewportPoint(hrp.Position)
-	if not onScreen or not WallHack.Settings.Enabled then
-		HideAll(d)
-		return
-	end
-
-	-- ESP
-	if WallHack.Visuals.ESP.Enabled then
-		local esp = d.Draw.ESP
-		esp.Visible = true
-		esp.Text = d.Player.Name .. " [" .. math.floor((hrp.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude) .. "]"
-		esp.Size = WallHack.Visuals.ESP.Size
-		esp.Color = WallHack.Visuals.ESP.Color
-		esp.Outline = WallHack.Visuals.ESP.Outline
-		esp.Center = true
-		esp.Position = Vector2new(rootPos.X, rootPos.Y - 25)
-	else
-		d.Draw.ESP.Visible = false
-	end
-
-	-- Tracer
-	if WallHack.Visuals.Tracer.Enabled then
-		local tr = d.Draw.Tracer
-		tr.Visible = true
-		tr.Color = WallHack.Visuals.Tracer.Color
-		tr.Thickness = WallHack.Visuals.Tracer.Thickness
-		tr.From = Vector2new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
-		tr.To = Vector2new(rootPos.X, rootPos.Y)
-	else
-		d.Draw.Tracer.Visible = false
-	end
-
-	-- Box
-	if WallHack.Visuals.Box.Enabled then
-		local box = d.Draw.Box
-		box.Visible = true
-		box.Color = WallHack.Visuals.Box.Color
-		box.Thickness = WallHack.Visuals.Box.Thickness
-		box.Filled = false
-
-		local headPos = WorldToViewportPoint(head.Position + Vector3new(0,0.5,0))
-		local legPos = WorldToViewportPoint(hrp.Position - Vector3new(0,3,0))
-		local sizeY = math.abs(headPos.Y - legPos.Y)
-		box.Size = Vector2new(sizeY/2, sizeY)
-		box.Position = Vector2new(rootPos.X - box.Size.X/2, rootPos.Y - box.Size.Y/2)
-	else
-		d.Draw.Box.Visible = false
-	end
-
-	-- Head Dot
-	if WallHack.Visuals.HeadDot.Enabled then
-		local dot = d.Draw.HeadDot
-		local hPos = WorldToViewportPoint(head.Position)
-		dot.Visible = true
-		dot.Color = WallHack.Visuals.HeadDot.Color
-		dot.Radius = 4
-		dot.Filled = true
-		dot.Position = Vector2new(hPos.X, hPos.Y)
-	else
-		d.Draw.HeadDot.Visible = false
-	end
-end
-
---// Wrap
-local function Wrap(player)
-	if player == LocalPlayer or WallHack.WrappedPlayers[player] then return end
-
-	local d = {
-		Player = player,
-		Character = nil,
-		Draw = CreateDrawings()
-	}
-
-	WallHack.WrappedPlayers[player] = d
-
-	player.CharacterAdded:Connect(function(char)
-		d.Character = char
-	end)
-
-	d.Connection = RunService.RenderStepped:Connect(function()
-		UpdatePlayer(d)
-	end)
-end
-
-local function UnWrap(player)
-	local d = WallHack.WrappedPlayers[player]
-	if not d then return end
-
-	if d.Connection then d.Connection:Disconnect() end
-	for _,v in pairs(d.Draw) do
-		if typeof(v) == "table" then
-			for _,x in pairs(v) do pcall(function() x:Remove() end) end
-		else
-			pcall(function() v:Remove() end)
-		end
-	end
-
-	WallHack.WrappedPlayers[player] = nil
-end
-
---// Load
-for _,p in ipairs(Players:GetPlayers()) do
-	Wrap(p)
-end
-
-WallHack.ServiceConnections.PlayerAdded = Players.PlayerAdded:Connect(Wrap)
-WallHack.ServiceConnections.PlayerRemoving = Players.PlayerRemoving:Connect(UnWrap)
-
---// Functions
-WallHack.Functions = {}
-
-function WallHack.Functions:Restart()
-	for _,p in ipairs(Players:GetPlayers()) do
-		if p ~= LocalPlayer then
-			UnWrap(p)
-			Wrap(p)
-		end
-	end
-end
-
-function WallHack.Functions:Exit()
-	for _,c in pairs(WallHack.ServiceConnections) do
-		c:Disconnect()
-	end
-	for _,p in ipairs(Players:GetPlayers()) do
-		if p ~= LocalPlayer then
-			UnWrap(p)
-		end
-	end
-	getgenv().AirHub.WallHack = nil
-end
+	if not hum or not hrp or not head then return hideAll(d) end
+	if WallHack.Settings.AliveCheck and hu
