@@ -1,15 +1,13 @@
 --[[
 
-	Superiority WallHack Module
+	Superiority WallHack (Stable + Skeleton + Chams)
 	CC0 1.0 Universal (2026)
-	Fully UI-Compatible
 
 ]]
 
 --// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
@@ -36,7 +34,7 @@ WallHack.Visuals = {
 		DisplayDistance = true,
 		DisplayHealth = false,
 		DisplayName = true,
-		Offset = -25,
+		Offset = -20,
 		TextColor = Color3.fromRGB(255,255,255),
 		OutlineColor = Color3.fromRGB(0,0,0),
 		TextTransparency = 0,
@@ -48,64 +46,20 @@ WallHack.Visuals = {
 		Enabled = true,
 		Transparency = 0,
 		Thickness = 1,
-		Increase = 1,
+		Color = Color3.fromRGB(255,255,255)
+	},
+
+	SkeletonSettings = {
+		Enabled = false,
 		Color = Color3.fromRGB(255,255,255),
-		Type = 1, -- 1 = 3D, 2 = 2D
-		Filled = false
+		Thickness = 1,
+		Transparency = 0
 	},
 
 	ChamsSettings = {
 		Enabled = false,
-		Filled = false,
-		EntireBody = false,
 		Transparency = 0.5,
-		Thickness = 1,
 		Color = Color3.fromRGB(255,0,0)
-	},
-
-	TracersSettings = {
-		Enabled = false,
-		Transparency = 0,
-		Thickness = 1,
-		Color = Color3.fromRGB(255,255,255),
-		Type = 1 -- Bottom / Center / Mouse
-	},
-
-	HeadDotSettings = {
-		Enabled = false,
-		Filled = true,
-		Transparency = 0,
-		Thickness = 1,
-		Sides = 16,
-		Color = Color3.fromRGB(255,255,255)
-	},
-
-	HealthBarSettings = {
-		Enabled = false,
-		Type = 3,
-		Transparency = 0,
-		Size = 4,
-		Blue = 0,
-		Offset = 0,
-		OutlineColor = Color3.fromRGB(0,0,0)
-	}
-}
-
-WallHack.Crosshair = {
-	Settings = {
-		Enabled = false,
-		Color = Color3.fromRGB(255,255,255),
-		Transparency = 0,
-		Size = 12,
-		Thickness = 1,
-		GapSize = 4,
-		Rotation = 0,
-		Type = 1,
-		CenterDot = false,
-		CenterDotColor = Color3.fromRGB(255,255,255),
-		CenterDotSize = 3,
-		CenterDotTransparency = 0,
-		CenterDotFilled = true
 	}
 }
 
@@ -113,26 +67,42 @@ WallHack.Crosshair = {
 
 local PlayerData = {}
 
+local SkeletonMap = {
+	{"Head","UpperTorso"},
+	{"UpperTorso","LowerTorso"},
+	{"UpperTorso","LeftUpperArm"},
+	{"LeftUpperArm","LeftLowerArm"},
+	{"LeftLowerArm","LeftHand"},
+	{"UpperTorso","RightUpperArm"},
+	{"RightUpperArm","RightLowerArm"},
+	{"RightLowerArm","RightHand"},
+	{"LowerTorso","LeftUpperLeg"},
+	{"LeftUpperLeg","LeftLowerLeg"},
+	{"LeftLowerLeg","LeftFoot"},
+	{"LowerTorso","RightUpperLeg"},
+	{"RightUpperLeg","RightLowerLeg"},
+	{"RightLowerLeg","RightFoot"}
+}
+
 local function newDrawings()
+	local skel = {}
+	for _ = 1, #SkeletonMap do
+		skel[#skel+1] = Drawing.new("Line")
+	end
+
 	return {
 		Text = Drawing.new("Text"),
 		Box = Drawing.new("Square"),
-		Tracer = Drawing.new("Line"),
-		HeadDot = Drawing.new("Circle"),
-		Health = {
-			Main = Drawing.new("Square"),
-			Outline = Drawing.new("Square")
-		}
-	end
+		Skeleton = skel
+	}
 end
 
 local function hideAll(d)
-	for _,v in pairs(d.Drawings) do
-		if typeof(v) == "table" then
-			for _,x in pairs(v) do x.Visible = false end
-		else
-			v.Visible = false
-		end
+	if not d then return end
+	d.Draw.Text.Visible = false
+	d.Draw.Box.Visible = false
+	for _,l in ipairs(d.Draw.Skeleton) do
+		l.Visible = false
 	end
 end
 
@@ -146,5 +116,34 @@ local function updatePlayer(d)
 	local hrp = char:FindFirstChild("HumanoidRootPart")
 	local head = char:FindFirstChild("Head")
 
-	if not hum or not hrp or not head then return hideAll(d) end
-	if WallHack.Settings.AliveCheck and hu
+	if not hum or not hrp or not head then
+		return hideAll(d)
+	end
+
+	if WallHack.Settings.AliveCheck and hum.Health <= 0 then
+		return hideAll(d)
+	end
+
+	if WallHack.Settings.TeamCheck and d.Player.Team == LocalPlayer.Team then
+		return hideAll(d)
+	end
+
+	if not WallHack.Settings.Enabled then
+		return hideAll(d)
+	end
+
+	local pos, onscreen = Camera:WorldToViewportPoint(hrp.Position)
+	if not onscreen then
+		return hideAll(d)
+	end
+
+	local dist = math.floor((hrp.Position - Camera.CFrame.Position).Magnitude)
+
+	-- ESP
+	if WallHack.Visuals.ESPSettings.Enabled then
+		local t = ""
+		if WallHack.Visuals.ESPSettings.DisplayName then t = d.Player.Name end
+		if WallHack.Visuals.ESPSettings.DisplayDistance then t ..= " ["..dist.."]" end
+		if WallHack.Visuals.ESPSettings.DisplayHealth then t ..= " ("..math.floor(hum.Health)..")" end
+
+		local e
