@@ -24,7 +24,7 @@ getgenv().AirHub = {}
 --// Load Modules
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/1useruser1/robloxwh/refs/heads/main/aimbot"))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/1useruser1/robloxwh/refs/heads/main/whh"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/1useruser1/robloxwh/refs/heads/main/wallh"))()
 
 --// Variables
 
